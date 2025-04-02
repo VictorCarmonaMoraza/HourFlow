@@ -23,7 +23,8 @@ def mostrar_ventana_proyectos(nombre_usuario):
         file_path = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xlsx")])
         if file_path:
             try:
-                df = pd.read_excel(file_path)
+                # Leer siempre la primera pestaña (Hoja1)
+                df = pd.read_excel(file_path, sheet_name="Hoja1")
                 df.rename(columns={"CÓDIGO PROYECTO": "Código Proyecto", "DESCRIPCIÓN": "Descripción"}, inplace=True)
 
                 proyectos = df["Código Proyecto"].tolist()
@@ -82,6 +83,10 @@ def mostrar_ventana_proyectos(nombre_usuario):
 
         if tiempo_inicio and proyecto_anterior and file_path is not None:
             try:
+                # Leer siempre la primera pestaña (Hoja1)
+                df = pd.read_excel(file_path, sheet_name="Hoja1")
+                df.rename(columns={"CÓDIGO PROYECTO": "Código Proyecto", "DESCRIPCIÓN": "Descripción"}, inplace=True)
+
                 indice = proyectos.index(proyecto_anterior)
 
                 # Calcular el tiempo invertido
