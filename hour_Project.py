@@ -24,13 +24,7 @@ def mostrar_ventana_proyectos(nombre_usuario):
         file_path = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xlsx")])
         if file_path:
             try:
-                document_path = os.path.join(os.getcwd(), "document")
-                os.makedirs(document_path, exist_ok=True)
-
-                new_file_path = os.path.join(document_path, os.path.basename(file_path))
-                shutil.copy(file_path, new_file_path)
-                file_path = new_file_path
-
+                # No crear la carpeta "document", usar el directorio actual
                 df = pd.read_excel(file_path)
 
                 # Vaciar campos a partir de la columna 0 si no están vacíos
@@ -155,10 +149,10 @@ def mostrar_ventana_proyectos(nombre_usuario):
                 export_file_path = os.path.join(desktop_path, export_file_name)
                 df.to_excel(export_file_path, index=False)
 
-                # Borrar la carpeta "document"
-                document_path = os.path.join(os.getcwd(), "document")
-                if os.path.exists(document_path):
-                    shutil.rmtree(document_path)
+                # No borrar la carpeta "document"
+                # document_path = os.path.join(os.getcwd(), "document")
+                # if os.path.exists(document_path):
+                #     shutil.rmtree(document_path)
 
             except Exception as e:
                 tk.messagebox.showerror("Error", f"Error al actualizar Excel: {e}")
