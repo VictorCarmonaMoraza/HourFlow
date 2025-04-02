@@ -64,10 +64,30 @@ def mostrar_ventana_proyectos(nombre_usuario):
     boton_cargar = tk.Button(ventana_proyectos, text="Cargar Excel", command=cargar_excel)
     boton_cargar.pack()
 
+    frame_proyecto = tk.Frame(ventana_proyectos)
+    frame_proyecto.pack()
+
     variable_proyecto = tk.StringVar(ventana_proyectos)
     variable_proyecto.set("Seleccionar proyecto")
-    desplegable_proyecto = tk.OptionMenu(ventana_proyectos, variable_proyecto, "Seleccionar proyecto")
-    desplegable_proyecto.pack()
+    desplegable_proyecto = tk.OptionMenu(frame_proyecto, variable_proyecto, "Seleccionar proyecto")
+    desplegable_proyecto.pack(side=tk.LEFT)
+
+    entrada_buscador = tk.Entry(frame_proyecto)
+    entrada_buscador.pack(side=tk.LEFT)
+
+    def buscar_proyecto(*args):
+        texto_busqueda = entrada_buscador.get().lower()
+        desplegable_proyecto["menu"].delete(0, "end")
+        proyectos_filtrados = [proyecto for proyecto in proyectos if texto_busqueda in proyecto.lower()]  # Corrección aquí
+        for proyecto in proyectos_filtrados:
+            desplegable_proyecto["menu"].add_command(label=proyecto,
+                                                     command=lambda p=proyecto: cambiar_proyecto(p, nombre_usuario))
+        if proyectos_filtrados:
+            variable_proyecto.set(proyectos_filtrados[0])  # Corrección aquí
+        else:
+            variable_proyecto.set("Seleccionar proyecto")  # Corrección aquí
+
+    entrada_buscador.bind("<KeyRelease>", buscar_proyecto)
 
     tiempo_inicio = None
     tiempo_fin = None
@@ -88,7 +108,9 @@ def mostrar_ventana_proyectos(nombre_usuario):
                 df.at[indice, "End"] = tiempo_fin.strftime("%Y-%m-%d %H:%M:%S")
 
                 tiempo_invertido = tiempo_fin - tiempo_inicio
-                df.at[indice, "Tiempo Invertido"] = str(tiempo_invertido)
+                horas, segundos = divmod(tiempo_invertido.seconds, 3600)
+                minutos, segundos = divmod(segundos, 60)
+                df.at[indice, "Tiempo Invertido"] = f"{horas:02d}:{minutos:02d}"  # Corrección aquí
                 df.to_excel(file_path, index=False)
             except Exception as e:
                 tk.messagebox.showerror("Error", f"Error al actualizar Excel: {e}")
@@ -121,13 +143,16 @@ def mostrar_ventana_proyectos(nombre_usuario):
                 df.at[indice, "End"] = tiempo_fin.strftime("%Y-%m-%d %H:%M:%S")
 
                 tiempo_invertido = tiempo_fin - tiempo_inicio
-                df.at[indice, "Tiempo Invertido"] = str(tiempo_invertido)
+                horas, segundos = divmod(tiempo_invertido.seconds, 3600)
+                minutos, segundos = divmod(segundos, 60)
+                df.at[indice, "Tiempo Invertido"] = f"{horas:02d}:{minutos:02d}"  # Corrección aquí
                 df.to_excel(file_path, index=False)
 
-                # Exportar el archivo Excel con nombre de usuario y fecha
+                # Exportar el archivo Excel al escritorio
                 fecha_actual = datetime.now().strftime("%Y-%m-%d")
                 export_file_name = f"{nombre_usuario}_{fecha_actual}.xlsx"
-                export_file_path = os.path.join(os.getcwd(), export_file_name)
+                desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")  # Obtener la ruta del escritorio
+                export_file_path = os.path.join(desktop_path, export_file_name)
                 df.to_excel(export_file_path, index=False)
 
                 # Borrar la carpeta "document"
