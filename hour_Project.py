@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox
 import pandas as pd
 from datetime import datetime
 import os
+import openpyxl
 
 def mostrar_ventana_proyectos(nombre_usuario):
     ventana_proyectos = tk.Tk()
@@ -188,19 +189,76 @@ def mostrar_ventana_proyectos(nombre_usuario):
                         "End": tiempo_fin.strftime("%Y-%m-%d %H:%M:%S"),
                         "Tiempo Invertido": f"{horas:02d}:{minutos:02d}:{segundos:02d}"
                     })
-                    fecha_actual = datetime.now().strftime("%Y-%m-%d")
-                    nombre_hoja = fecha_actual
-                    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                        pd.DataFrame(datos_proyectos).to_excel(writer, sheet_name=nombre_hoja, index=False)
+                    crear_o_actualizar_pestaña(file_path, datos_proyectos)
                 except Exception as e:
                     messagebox.showerror("Error", f"Error al actualizar Excel: {e}")
             ventana_proyectos.destroy()
 
-    boton_pausar = tk.Button(ventana_proyectos, text="Pausar", command=pausar_contador)
-    boton_pausar.pack()
+    def comprobar_pestaña_fecha_actual(nombre_archivo):
+        """
+        Comprueba si existe una pestaña con la fecha actual en un archivo Excel.
 
-    boton_finalizar = tk.Button(ventana_proyectos, text="Finalizar", command=finalizar_proceso)
-    boton_finalizar.pack()
+        Args:
+            nombre_archivo (str): La ruta al archivo Excel.
+
+        Returns:
+            bool: True si la pestaña existe, False en caso contrario.
+        """
+        try:
+            # Cargar el archivo Excel
+            libro_trabajo = openpyxl.load_workbook(nombre_archivo)
+
+            # Obtener la fecha actual en formato "YYYY-MM-DD"
+            fecha_actual = datetime.now().strftime("%Y-%m-%d")
+
+            # Comprobar si la pestaña con la fecha actual existe
+            if fecha_actual in libro_trabajo.sheetnames:
+                return True
+            else:
+                return False
+
+        except FileNotFoundError:
+            print(f"Error: El archivo '{nombre_archivo}' no fue encontrado.")
+            return False
+        except Exception as e:
+            print(f"Error inesperado: {e}")
+            return False
+
+    def crear_o_actualizar_pestaña(nombre_archivo, datos):
+        """
+        Crea una nueva pestaña con la fecha actual o actualiza la existente.
+
+        Args:
+            nombre_archivo (str): La ruta al archivo Excel.
+            datos (list): Una lista de diccionarios con los datos a escribir en la pestaña.
+        """
+        try:
+            # Cargar el archivo Excel
+            libro_trabajo = openpyxl.load_workbook(nombre_archivo)
+
+            # Obtener la fecha actual en formato "YYYY-MM-DD"
+            fecha_actual = datetime.now().strftime("%Y-%m-%d")
+
+            # Comprobar si la pestaña con la fecha actual existe
+            if fecha_actual in libro_trabajo.sheetnames:
+                # Seleccionar la pestaña existente
+                hoja = libro_trabajo[fecha_actual]
+            else:
+                # Crear una nueva pestaña con la fecha actual
+                hoja = libro_trabajo.create_sheet(fecha_actual)
+
+            # Escribir los datos en la pestaña
+            for fila_idx, fila_datos in enumerate(datos, start=1):
+                for col_idx, valor in enumerate(fila_datos.values(), start=1):
+                    hoja.cell(row=fila_idx, column=col_idx, value=valor)
+
+            # Guardar el archivo Excel
+            libro_trabajo.save(nombre_archivo)
+
+        except FileNotFoundError:
+            print(f"Error: El archivo '{nombre_archivo}' no fue encontrado.")
+        except Exception as e:
+            print(f"Error inesperado: {e}")
 
     def cerrar_ventana():
         nonlocal tiempo_inicio, tiempo_fin, proyecto_anterior, df, file_path, datos_proyectos
@@ -218,13 +276,16 @@ def mostrar_ventana_proyectos(nombre_usuario):
                     "End": tiempo_fin.strftime("%Y-%m-%d %H:%M:%S"),
                     "Tiempo Invertido": f"{horas:02d}:{minutos:02d}:{segundos:02d}"
                 })
-                fecha_actual = datetime.now().strftime("%Y-%m-%d")
-                nombre_hoja = fecha_actual
-                with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                    pd.DataFrame(datos_proyectos).to_excel(writer, sheet_name=nombre_hoja, index=False)
+                crear_o_actualizar_pestaña(file_path, datos_proyectos)
             except Exception as e:
                 messagebox.showerror("Error", f"Error al cerrar la ventana: {e}")
         ventana_proyectos.destroy()
+
+    boton_pausar = tk.Button(ventana_proyectos, text="Pausar", command=pausar_contador)
+    boton_pausar.pack()
+
+    boton_finalizar = tk.Button(ventana_proyectos, text="Finalizar", command=finalizar_proceso)
+    boton_finalizar.pack()
 
     ventana_proyectos.protocol("WM_DELETE_WINDOW", cerrar_ventana)
 
