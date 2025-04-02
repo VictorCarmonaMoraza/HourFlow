@@ -121,17 +121,18 @@ def mostrar_ventana_proyectos(nombre_usuario):
 
     def finalizar_proceso():
         nonlocal tiempo_inicio, tiempo_fin, proyecto_anterior, df, file_path, datos_proyectos
-        if tiempo_inicio and proyecto_anterior and file_path is not None:
-            try:
-                # Crear la nueva hoja con los datos de los proyectos
-                fecha_actual = datetime.now().strftime("%Y-%m-%d")
-                nombre_hoja = fecha_actual
-                with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                    pd.DataFrame(datos_proyectos).to_excel(writer, sheet_name=nombre_hoja, index=False)
+        if messagebox.askyesno("Confirmar", "¿Estás seguro de que quieres finalizar el proceso?"): #Popup de confirmación
+            if tiempo_inicio and proyecto_anterior and file_path is not None:
+                try:
+                    # Crear la nueva hoja con los datos de los proyectos
+                    fecha_actual = datetime.now().strftime("%Y-%m-%d")
+                    nombre_hoja = fecha_actual
+                    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                        pd.DataFrame(datos_proyectos).to_excel(writer, sheet_name=nombre_hoja, index=False)
 
-            except Exception as e:
-                messagebox.showerror("Error", f"Error al actualizar Excel: {e}")
-        ventana_proyectos.destroy()
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error al actualizar Excel: {e}")
+            ventana_proyectos.destroy()
 
     boton_finalizar = tk.Button(ventana_proyectos, text="Finalizar", command=finalizar_proceso)
     boton_finalizar.pack()
