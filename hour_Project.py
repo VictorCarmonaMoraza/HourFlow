@@ -135,6 +135,7 @@ def mostrar_ventana_proyectos(nombre_usuario):
 
     def pausar_contador():
         nonlocal contador_pausado, color_contador, tiempo_inicio, proyecto_anterior, datos_proyectos, df, nombre_usuario, tiempo_pausa_inicio, tiempo_acumulado_pausa
+
         contador_pausado = not contador_pausado  # Cambiar el estado de pausa
         if contador_pausado:
             color_contador = "green"  # Cambiar el color del contador a verde
@@ -149,7 +150,7 @@ def mostrar_ventana_proyectos(nombre_usuario):
                 datos_proyectos.append({
                     "Código Proyecto": proyecto_anterior,
                     "Descripción": df.at[proyectos.index(proyecto_anterior), "Descripción"],  # Agregar la descripción
-                    "Usuario": nombre_usuario,
+                    "Usuario": "Prueba Pausa Victor",
                     "Start": tiempo_inicio.strftime("%Y-%m-%d %H:%M:%S"),
                     "End": tiempo_fin.strftime("%Y-%m-%d %H:%M:%S"),
                     "Tiempo Invertido": f"{horas:02d}:{minutos:02d}:{segundos:02d}"
@@ -159,8 +160,13 @@ def mostrar_ventana_proyectos(nombre_usuario):
                 proyecto_anterior = "23-BONP-NOP-0097-00"
                 variable_proyecto.set(proyecto_anterior)
 
-            tiempo_inicio = None  # Reiniciar el contador a cero
-            etiqueta_contador.config(text="00:00:00")  # Mostrar "00:00:00" en el contador
+                # No reiniciar tiempo_inicio, solo guardar el tiempo transcurrido
+                tiempo_acumulado_pausa = tiempo_transcurrido.seconds
+            else:
+                tiempo_acumulado_pausa = 0
+
+            etiqueta_contador.config(
+                text=f"{horas:02d}:{minutos:02d}:{segundos:02d}")  # Mostrar el tiempo transcurrido en el contador
             etiqueta_contador.config(fg=color_contador)  # Actualizar el color del contador
 
         else:
