@@ -5,6 +5,8 @@ from datetime import datetime
 import os
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
+from datetime import datetime, timedelta
+from openpyxl.styles import PatternFill, Font
 
 
 def mostrar_ventana_proyectos(nombre_usuario):
@@ -256,6 +258,12 @@ def mostrar_ventana_proyectos(nombre_usuario):
     from datetime import datetime, timedelta
     from openpyxl.utils.dataframe import dataframe_to_rows
 
+    import pandas as pd
+    import openpyxl
+    from datetime import datetime, timedelta
+    from openpyxl.utils.dataframe import dataframe_to_rows
+    from openpyxl.styles import PatternFill, Font
+
     def crear_o_actualizar_pestaña(nombre_archivo, datos):
         """
         Crea una nueva pestaña con la fecha actual o actualiza la existente, sumando tiempos si el proyecto ya existe.
@@ -330,8 +338,15 @@ def mostrar_ventana_proyectos(nombre_usuario):
 
             # Escribir los datos actualizados en la pestaña
             hoja.delete_rows(1, hoja.max_row)  # Limpiar la hoja existente
-            for r in dataframe_to_rows(df_existente, index=False, header=True):
+            for r_idx, r in enumerate(dataframe_to_rows(df_existente, index=False, header=True)):
                 hoja.append(r)
+                if r_idx == 0:  # Aplicar estilo a la fila de cabeceras
+                    colores = ["fc02b0", "3aa91c", "17f5eb", "E0E0E0", "F0F0F0", "FFFFFF"]  # Lista de colores
+                    for c_idx, cell in enumerate(hoja[1]):
+                        cell.fill = PatternFill(start_color=colores[c_idx % len(colores)],
+                                                end_color=colores[c_idx % len(colores)],
+                                                fill_type="solid")  # Color de relleno
+                        cell.font = Font(color="000000")  # Color de fuente negro
 
             # Guardar el archivo Excel
             libro_trabajo.save(nombre_archivo)
