@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import datetime
 import os
 import openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
+
 
 def mostrar_ventana_proyectos(nombre_usuario):
     ventana_proyectos = tk.Tk()
@@ -235,9 +237,28 @@ def mostrar_ventana_proyectos(nombre_usuario):
             print(f"Error inesperado: {e}")
             return False
 
+    import pandas as pd
+    import openpyxl
+    from datetime import datetime, timedelta
+
+    import pandas as pd
+    import openpyxl
+    from datetime import datetime, timedelta
+    from openpyxl.utils.dataframe import dataframe_to_rows
+
+    import pandas as pd
+    import openpyxl
+    from datetime import datetime, timedelta
+    from openpyxl.utils.dataframe import dataframe_to_rows
+
+    import pandas as pd
+    import openpyxl
+    from datetime import datetime, timedelta
+    from openpyxl.utils.dataframe import dataframe_to_rows
+
     def crear_o_actualizar_pestaña(nombre_archivo, datos):
         """
-        Crea una nueva pestaña con la fecha actual o actualiza la existente.
+        Crea una nueva pestaña con la fecha actual o actualiza la existente, sumando tiempos si el proyecto ya existe.
 
         Args:
             nombre_archivo (str): La ruta al archivo Excel.
@@ -258,10 +279,59 @@ def mostrar_ventana_proyectos(nombre_usuario):
                 # Crear una nueva pestaña con la fecha actual
                 hoja = libro_trabajo.create_sheet(fecha_actual)
 
-            # Escribir los datos en la pestaña
-            for fila_idx, fila_datos in enumerate(datos, start=1):
-                for col_idx, valor in enumerate(fila_datos.values(), start=1):
-                    hoja.cell(row=fila_idx, column=col_idx, value=valor)
+            # Leer los datos existentes de la pestaña en un DataFrame
+            df_existente = pd.DataFrame(hoja.values)
+            if df_existente.empty:
+                df_existente = pd.DataFrame(
+                    columns=["Código Proyecto", "Descripción", "Usuario", "Start", "End", "Tiempo Invertido"])
+            else:
+                df_existente.columns = df_existente.iloc[0]
+                df_existente = df_existente[1:]
+
+                # Convertir la columna "Tiempo Invertido" a timedelta para sumar tiempos
+                df_existente["Tiempo Invertido"] = pd.to_timedelta(df_existente["Tiempo Invertido"], errors='coerce')
+
+            # Convertir los nuevos datos a un DataFrame
+            df_nuevo = pd.DataFrame(datos)
+
+            # Convertir la columna "Tiempo Invertido" a timedelta para sumar tiempos
+            df_nuevo["Tiempo Invertido"] = pd.to_timedelta(df_nuevo["Tiempo Invertido"], errors='coerce')
+
+            # Verificar si existe un registro con el mismo código de proyecto
+            for index, row in df_nuevo.iterrows():
+                codigo_proyecto = row["Código Proyecto"]
+                if codigo_proyecto in df_existente["Código Proyecto"].values:
+                    # Sumar los tiempos invertidos
+                    try:
+                        tiempo_invertido_existente = \
+                        df_existente.loc[df_existente["Código Proyecto"] == codigo_proyecto, "Tiempo Invertido"].iloc[0]
+                        tiempo_invertido_nuevo = row["Tiempo Invertido"]
+                        tiempo_invertido_sumado = tiempo_invertido_existente + tiempo_invertido_nuevo
+
+                        # Actualizar el registro existente
+                        df_existente.loc[df_existente[
+                                             "Código Proyecto"] == codigo_proyecto, "Tiempo Invertido"] = tiempo_invertido_sumado
+                    except IndexError:
+                        # Si no se encuentra el registro, agregar el nuevo registro
+                        if not df_existente.empty:  # Agregamos esta comprobación
+                            df_existente = pd.concat([df_existente, pd.DataFrame([row])], ignore_index=True)
+                        else:
+                            df_existente = pd.DataFrame([row])
+                else:
+                    # Agregar el nuevo registro al DataFrame existente
+                    if not df_existente.empty:  # Agregamos esta comprobación
+                        df_existente = pd.concat([df_existente, pd.DataFrame([row])], ignore_index=True)
+                    else:
+                        df_existente = pd.DataFrame([row])
+
+            # Convertir la columna "Tiempo Invertido" a string para escribir en Excel
+            df_existente["Tiempo Invertido"] = df_existente["Tiempo Invertido"].apply(
+                lambda x: str(x).split(' ')[-1] if isinstance(x, timedelta) else str(x))
+
+            # Escribir los datos actualizados en la pestaña
+            hoja.delete_rows(1, hoja.max_row)  # Limpiar la hoja existente
+            for r in dataframe_to_rows(df_existente, index=False, header=True):
+                hoja.append(r)
 
             # Guardar el archivo Excel
             libro_trabajo.save(nombre_archivo)
@@ -270,7 +340,6 @@ def mostrar_ventana_proyectos(nombre_usuario):
             print(f"Error: El archivo '{nombre_archivo}' no fue encontrado.")
         except Exception as e:
             print(f"Error inesperado: {e}")
-
     def cerrar_ventana():
         nonlocal tiempo_inicio, tiempo_fin, proyecto_anterior, df, file_path, datos_proyectos
         if tiempo_inicio and proyecto_anterior and file_path is not None:
