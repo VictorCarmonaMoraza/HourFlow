@@ -155,28 +155,33 @@ def mostrar_ventana_proyectos(nombre_usuario):
                     "Tiempo Invertido": f"{horas:02d}:{minutos:02d}:{segundos:02d}"
                 })
 
+                # Cambiar el proyecto actual al proyecto especificado (23-BONP-NOP-0097-00)
+                proyecto_anterior = "23-BONP-NOP-0097-00"
+                variable_proyecto.set(proyecto_anterior)
+
             tiempo_inicio = None  # Reiniciar el contador a cero
             etiqueta_contador.config(text="00:00:00")  # Mostrar "00:00:00" en el contador
             etiqueta_contador.config(fg=color_contador)  # Actualizar el color del contador
 
-            # Cambiar el proyecto actual al proyecto especificado (23-BONP-NOP-0097-00)
-            proyecto_anterior = "23-BONP-NOP-0097-00"
-            variable_proyecto.set(proyecto_anterior)
         else:
             color_contador = "black"  # Cambiar el color del contador a negro
             etiqueta_contador.config(fg=color_contador)  # Actualizar el color del contador
             tiempo_inicio = datetime.now()  # Reiniciar el tiempo de inicio al reanudar
             if tiempo_pausa_inicio:
                 tiempo_acumulado_pausa += (datetime.now() - tiempo_pausa_inicio).seconds
-            tiempo_pausa_inicio = None #Reiniciar el tiempo de pausa
+            tiempo_pausa_inicio = None  # Reiniciar el tiempo de pausa
             actualizar_contador()  # Reanudar el contador
 
     def finalizar_proceso():
         nonlocal tiempo_inicio, tiempo_fin, proyecto_anterior, df, file_path, datos_proyectos
-        if messagebox.askyesno("Confirmar",
-                               "¿Estás seguro de que quieres finalizar el proceso?"):  # Popup de confirmación
+        if messagebox.askyesno("Confirmar", "¿Estás seguro de que quieres finalizar el proceso?"):
+            print(f"tiempo_inicio: {tiempo_inicio}")
+            print(f"proyecto_anterior: {proyecto_anterior}")
+            print(f"file_path: {file_path}")
             if tiempo_inicio and proyecto_anterior and file_path is not None:
                 try:
+                    print(f"Datos a escribir: {datos_proyectos}")
+                    print(f"Ruta del archivo: {file_path}")
                     tiempo_fin = datetime.now()
                     tiempo_invertido = tiempo_fin - tiempo_inicio
                     horas, segundos_totales = divmod(tiempo_invertido.seconds, 3600)
